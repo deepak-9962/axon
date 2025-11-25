@@ -14,7 +14,7 @@ import { Download, Image as ImageIcon, FileText, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface ExportMenuProps {
-  viewportRef: React.RefObject<HTMLDivElement>;
+  viewportRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const ExportMenu = ({ viewportRef }: ExportMenuProps) => {

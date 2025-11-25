@@ -1,7 +1,7 @@
 import { toPng } from 'html-to-image';
 import { Node, Edge } from '@xyflow/react';
 
-export const downloadGraphAsPng = async (viewportRef: React.RefObject<HTMLDivElement>) => {
+export const downloadGraphAsPng = async (viewportRef: React.RefObject<HTMLDivElement | null>) => {
   if (!viewportRef.current) return;
 
   try {
