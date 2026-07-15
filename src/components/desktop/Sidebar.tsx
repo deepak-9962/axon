@@ -178,11 +178,11 @@ const Sidebar = () => {
         </Button>
       </div>
 
-      <div className="space-y-2 flex-1">
+      <div className="space-y-2 flex-1 flex flex-col min-h-[200px]">
         <Label>Practice Box</Label>
         <Textarea 
           placeholder="Type your answer here to check for keywords..." 
-          className="h-full min-h-[200px] resize-none"
+          className="flex-1 min-h-[120px] resize-none"
           value={practiceText}
           onChange={(e) => setPracticeText(e.target.value)}
         />
