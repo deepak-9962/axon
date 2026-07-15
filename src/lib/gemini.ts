@@ -71,7 +71,7 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
     return response.text();
   };
 
-  let text: string;
+  let text: string = '';
   try {
     text = await runGeneration(modelName);
   } catch (error: any) {
@@ -86,29 +86,41 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
       
       const candidates = availableModels.filter(name => name !== modelName);
       
-      // 1. Prefer any flash model
-      let fallbackModel = candidates.find(name => name.toLowerCase().includes('flash'));
+      // Sort candidates: Flash models first, then Pro models, then any other
+      const sortedCandidates = [...candidates].sort((a, b) => {
+        const aIsFlash = a.toLowerCase().includes('flash');
+        const bIsFlash = b.toLowerCase().includes('flash');
+        if (aIsFlash && !bIsFlash) return -1;
+        if (!aIsFlash && bIsFlash) return 1;
+        
+        const aIsPro = a.toLowerCase().includes('pro');
+        const bIsPro = b.toLowerCase().includes('pro');
+        if (aIsPro && !bIsPro) return -1;
+        if (!aIsPro && bIsPro) return 1;
+        
+        return 0;
+      });
       
-      // 2. Fall back to any pro model
-      if (!fallbackModel) {
-        fallbackModel = candidates.find(name => name.toLowerCase().includes('pro'));
-      }
+      console.log("Sorted fallback candidates:", sortedCandidates);
       
-      // 3. Fall back to any candidate
-      if (!fallbackModel && candidates.length > 0) {
-        fallbackModel = candidates[0];
-      }
+      let success = false;
+      let lastFallbackError = null;
       
-      if (fallbackModel) {
+      for (const fallbackModel of sortedCandidates) {
         console.log(`Retrying generation with fallback model: "${fallbackModel}"`);
         try {
           text = await runGeneration(fallbackModel);
+          success = true;
+          console.log(`Successfully generated using fallback model: "${fallbackModel}"`);
+          break;
         } catch (fallbackError: any) {
-          console.error(`Fallback to model "${fallbackModel}" also failed:`, fallbackError);
-          throw fallbackError;
+          console.warn(`Fallback model "${fallbackModel}" failed:`, fallbackError?.message || fallbackError);
+          lastFallbackError = fallbackError;
         }
-      } else {
-        throw error;
+      }
+      
+      if (!success) {
+        throw lastFallbackError || error;
       }
     } else {
       throw error;
