@@ -9,8 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Key } from 'lucide-react';
 import { Node } from '@xyflow/react';
+import { useRouter } from 'next/navigation';
+import { clearStorage } from '@/lib/secure-storage';
 import {
   Sheet,
   SheetContent,
@@ -21,7 +23,8 @@ import {
 } from "@/components/ui/sheet";
 
 const MobileDrawer = () => {
-  const { apiKey, modelName, setNodes, setEdges, nodes, setNodes: updateNodes } = useStore();
+  const router = useRouter();
+  const { apiKey, modelName, setNodes, setEdges, nodes, setNodes: updateNodes, setApiKey, setModelName } = useStore();
   const [question, setQuestion] = useState('');
   const [marks, setMarks] = useState([5]);
   const [loading, setLoading] = useState(false);
@@ -106,6 +109,14 @@ const MobileDrawer = () => {
     }
   };
 
+  const handleChangeKey = async () => {
+    await clearStorage();
+    setApiKey(null);
+    setModelName('');
+    toast({ title: "Disconnected", description: "API key removed from local storage." });
+    router.replace('/auth');
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (!nodes || !nodes.length) return;
@@ -187,6 +198,23 @@ const MobileDrawer = () => {
               value={practiceText}
               onChange={(e) => setPracticeText(e.target.value)}
             />
+          </div>
+
+          {/* Footer / Settings Section */}
+          <div className="pt-4 border-t border-stone-200 mt-auto flex flex-col gap-2 shrink-0">
+            <div className="flex items-center justify-between text-xs text-stone-500">
+              <span>Active Model:</span>
+              <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded">{modelName || 'None'}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleChangeKey}
+              className="w-full flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900"
+            >
+              <Key className="w-3.5 h-3.5" />
+              Change API Key
+            </Button>
           </div>
         </div>
       </SheetContent>

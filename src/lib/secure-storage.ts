@@ -43,3 +43,17 @@ export const getModelName = async () => {
     return 'gemini-1.5-flash'; // Default fallback
   }
 };
+
+export const clearStorage = async () => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await SecureStoragePlugin.remove({ key: 'GEMINI_API_KEY' });
+      await SecureStoragePlugin.remove({ key: 'GEMINI_MODEL_NAME' });
+    } catch (e) {
+      console.warn('Error clearing secure storage:', e);
+    }
+  } else {
+    localStorage.removeItem('GEMINI_API_KEY');
+    localStorage.removeItem('GEMINI_MODEL_NAME');
+  }
+};
