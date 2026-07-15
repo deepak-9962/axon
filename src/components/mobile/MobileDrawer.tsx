@@ -117,7 +117,7 @@ const MobileDrawer = () => {
     router.replace('/auth');
   };
 
-  // Smart Keyword Detector (shared logic)
+  // Keyword Detector — prefix match
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (!nodes || !nodes.length) return;
@@ -126,18 +126,11 @@ const MobileDrawer = () => {
 
       const isKeywordMatched = (keyword: string, text: string): boolean => {
         const kLower = keyword.toLowerCase().trim();
-        if (!kLower) return false;
-        const escaped = kLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const boundaryRegex = new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'i');
-        if (boundaryRegex.test(text)) return true;
+        if (!kLower || !text.trim()) return false;
         const keywordWords = kLower.split(/\s+/).filter(Boolean);
-        const textWords = text.split(/\s+/).filter(Boolean);
-        return keywordWords.every((kWord) =>
-          textWords.some(
-            (tWord) =>
-              tWord.startsWith(kWord.slice(0, Math.max(4, kWord.length - 2))) ||
-              kWord.startsWith(tWord.slice(0, Math.max(4, tWord.length - 2)))
-          )
+        const typedWords = text.split(/\s+/).filter((w) => w.length >= 2);
+        return typedWords.some((tWord) =>
+          keywordWords.some((kWord) => kWord.startsWith(tWord))
         );
       };
 

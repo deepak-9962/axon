@@ -110,7 +110,7 @@ const Sidebar = () => {
     router.replace('/auth');
   };
 
-  // Smart Keyword Detector
+  // Keyword Detector — prefix match (fires as soon as first chars typed)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (!nodes || !nodes.length) return;
@@ -118,30 +118,22 @@ const Sidebar = () => {
       const normalizedText = practiceText.toLowerCase();
 
       /**
-       * Smart match: checks if a keyword is found in the user's text using:
-       * 1. Exact word-boundary match (e.g. "ETL" matches "ETL pipeline" but not "ETLs")
-       * 2. Mutual stem match: if keyword starts with user-word or user-word starts with keyword
-       *    (e.g. "transaction" matches "transactional", "normalize" matches "normalization")
+       * Prefix match: a keyword is considered matched if ANY word the user has typed
+       * is a prefix of ANY word in the keyword (min 2 chars to avoid single-letter noise).
+       * e.g. typing "dat" matches keyword "data warehouse"
+       *      typing "trans" matches keyword "transaction"
+       *      typing "etl" matches keyword "ETL Pipeline"
        */
       const isKeywordMatched = (keyword: string, text: string): boolean => {
         const kLower = keyword.toLowerCase().trim();
-        if (!kLower) return false;
+        if (!kLower || !text.trim()) return false;
 
-        // 1. Word-boundary regex match for the full keyword phrase
-        const escaped = kLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const boundaryRegex = new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'i');
-        if (boundaryRegex.test(text)) return true;
-
-        // 2. Stem matching: split keyword into words and check each
         const keywordWords = kLower.split(/\s+/).filter(Boolean);
-        const textWords = text.split(/\s+/).filter(Boolean);
+        const typedWords = text.split(/\s+/).filter((w) => w.length >= 2);
 
-        return keywordWords.every((kWord) =>
-          textWords.some(
-            (tWord) =>
-              tWord.startsWith(kWord.slice(0, Math.max(4, kWord.length - 2))) ||
-              kWord.startsWith(tWord.slice(0, Math.max(4, tWord.length - 2)))
-          )
+        // A keyword matches if at least one typed word is a prefix of at least one keyword word
+        return typedWords.some((tWord) =>
+          keywordWords.some((kWord) => kWord.startsWith(tWord))
         );
       };
 
