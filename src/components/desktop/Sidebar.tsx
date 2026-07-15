@@ -69,7 +69,8 @@ const Sidebar = () => {
           id: `e-${branch.parent_id}-${branch.id}`,
           source: branch.parent_id === 'root' ? 'root' : branch.parent_id,
           target: branch.id,
-          type: 'smoothstep',
+          type: 'default',
+          style: { stroke: '#cbd5e1', strokeWidth: 2 },
         });
       });
 

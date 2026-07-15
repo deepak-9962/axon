@@ -2,14 +2,18 @@
 import dagre from '@/lib/dagre';
 import { Node, Edge } from '@xyflow/react';
 
-const nodeWidth = 180;
-const nodeHeight = 60;
+const nodeWidth = 265; // Matches the 250px card width + horizontal padding
+const nodeHeight = 100; // Matches average card height + vertical spacing
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  dagreGraph.setGraph({ rankdir: 'LR' }); // Left-to-Right flow
+  dagreGraph.setGraph({ 
+    rankdir: 'LR',
+    nodesep: 90,   // Vertical separation between nodes
+    ranksep: 160,  // Horizontal separation between columns/ranks
+  });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
