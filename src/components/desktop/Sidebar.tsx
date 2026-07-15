@@ -79,9 +79,20 @@ const Sidebar = () => {
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
       toast({ title: "Success", description: "Mind map generated!" });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({ title: "Error", description: "Failed to generate mind map.", variant: "destructive" });
+      const errMsg = error?.message || String(error);
+      let description = "Failed to generate mind map.";
+      
+      if (errMsg.includes('429') || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('limit')) {
+        description = "API Rate Limit/Quota Exceeded. Please check your Google AI Studio billing details or wait a minute before retrying.";
+      } else if (errMsg.toLowerCase().includes('key') || errMsg.toLowerCase().includes('unauthorized') || errMsg.toLowerCase().includes('api_key')) {
+        description = "Invalid API Key. Please log in again with a valid Gemini API Key.";
+      } else if (error instanceof Error) {
+        description = error.message;
+      }
+      
+      toast({ title: "Generation Failed", description, variant: "destructive" });
     } finally {
       setLoading(false);
     }
