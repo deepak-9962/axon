@@ -24,9 +24,20 @@ import {
 
 const MobileDrawer = () => {
   const router = useRouter();
-  const { apiKey, modelName, setNodes, setEdges, nodes, setNodes: updateNodes, setApiKey, setModelName } = useStore();
-  const [question, setQuestion] = useState('');
-  const [marks, setMarks] = useState([5]);
+  const { 
+    apiKey, 
+    modelName, 
+    setNodes, 
+    setEdges, 
+    nodes, 
+    setNodes: updateNodes, 
+    setApiKey, 
+    setModelName,
+    question,
+    setQuestion,
+    marks,
+    setMarks
+  } = useStore();
   const [loading, setLoading] = useState(false);
   const [practiceText, setPracticeText] = useState('');
   const { toast } = useToast();
@@ -44,7 +55,7 @@ const MobileDrawer = () => {
 
     setLoading(true);
     try {
-      const aiResponse = await generateMindMap(question, marks[0], apiKey, modelName);
+      const aiResponse = await generateMindMap(question, marks, apiKey, modelName);
       
       const newNodes: Node[] = [];
       const newEdges: any[] = [];
@@ -191,11 +202,11 @@ const MobileDrawer = () => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>Marks</Label>
-                <span className="text-sm text-muted-foreground">{marks[0]}</span>
+                <span className="text-sm text-muted-foreground">{marks}</span>
               </div>
               <Slider 
-                value={marks} 
-                onValueChange={setMarks} 
+                value={[marks]} 
+                onValueChange={(val) => setMarks(val[0])} 
                 min={2} 
                 max={15} 
                 step={1} 

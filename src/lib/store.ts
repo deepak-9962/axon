@@ -8,11 +8,15 @@ interface AppState {
   nodes: Node[];
   edges: Edge[];
   userAnswer: string;
+  question: string;
+  marks: number;
   setApiKey: (key: string | null) => void;
   setModelName: (model: string) => void;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   setUserAnswer: (answer: string) => void;
+  setQuestion: (question: string) => void;
+  setMarks: (marks: number) => void;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   toggleNodeExpanded: (nodeId: string) => void;
@@ -24,11 +28,25 @@ export const useStore = create<AppState>((set, get) => ({
   nodes: [],
   edges: [],
   userAnswer: '',
+  question: '',
+  marks: 5,
   setApiKey: (key) => set({ apiKey: key }),
   setModelName: (model) => set({ modelName: model }),
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
   setUserAnswer: (answer) => set({ userAnswer: answer }),
+  setQuestion: (question) => {
+    set({ question });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('AXON_QUESTION', question);
+    }
+  },
+  setMarks: (marks) => {
+    set({ marks });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('AXON_MARKS', marks.toString());
+    }
+  },
   onNodesChange: (changes) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes),
