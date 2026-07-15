@@ -19,7 +19,8 @@ export default function StudioPage() {
   useEffect(() => {
     const initializeStore = async () => {
       try {
-        const key = await getApiKey();
+        const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const key = envKey || await getApiKey();
         const model = await getModelName();
         
         if (key) {

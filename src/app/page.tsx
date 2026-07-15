@@ -14,12 +14,22 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const key = await getApiKey();
+        const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const key = envKey || await getApiKey();
         const model = await getModelName();
         
         if (key) {
           setApiKey(key);
           if (model) setModelName(model);
+          
+          // Load question and marks
+          if (typeof window !== 'undefined') {
+            const savedQuestion = localStorage.getItem('AXON_QUESTION');
+            const savedMarks = localStorage.getItem('AXON_MARKS');
+            if (savedQuestion) useStore.getState().setQuestion(savedQuestion);
+            if (savedMarks) useStore.getState().setMarks(parseInt(savedMarks, 10));
+          }
+          
           router.replace('/studio');
         } else {
           router.replace('/auth');
@@ -33,7 +43,7 @@ export default function Home() {
     };
 
     checkAuth();
-  }, [router, setApiKey]);
+  }, [router, setApiKey, setModelName]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center">
