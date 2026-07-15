@@ -6,44 +6,44 @@ const nodeWidth = 265; // Matches the 250px card width + horizontal padding
 
 export const getNodeHeight = (node: Node): number => {
   if (node.type === 'custom') {
-    return 70;
+    return 80;
   }
   
   if (node.type === 'richNode') {
     const expanded = !!node.data?.expanded;
     if (!expanded) {
-      return 60; // Sleek collapsed height
+      return 70; // Sleek collapsed height with safety padding
     }
     
-    // Calculate expanded height dynamically
+    // Calculate expanded height dynamically with a generous safety margin for text wrapping
     const detailsCount = (node.data.details as string[] | undefined)?.length || 0;
     const matchedKeywords = (node.data.matchedKeywords as string[] | undefined) ?? [];
     const missedKeywords = (node.data.missedKeywords as string[] | undefined) ?? [];
     const totalKeywords = matchedKeywords.length + missedKeywords.length;
     
-    let height = 55; // Header height
+    let height = 90; // Larger base height for header & title wrapping
     
-    // Keyword badges section height
+    // Keyword badges section height (assuming 2 badges per row to account for wrapping)
     if (totalKeywords > 0) {
-      const keywordLines = Math.max(1, Math.ceil(totalKeywords / 3));
-      height += 24 + keywordLines * 26;
+      const keywordLines = Math.max(1, Math.ceil(totalKeywords / 2));
+      height += 35 + keywordLines * 28;
     }
     
-    // Details height
+    // Details list height (each detail bullet can wrap to 2 lines)
     if (detailsCount > 0) {
-      height += detailsCount * 22;
+      height += detailsCount * 30; // 30px per detail allows for wrapping
     }
     
-    // Exam tip height
+    // Exam tip box height (tip text usually wraps to 2-3 lines)
     if (node.data.exam_tip) {
-      height += 65;
+      height += 90;
     }
     
-    height += 24; // Padding
-    return Math.max(100, height);
+    height += 40; // Additional safety margin cushion
+    return Math.max(150, height);
   }
   
-  return 80; // default fallback
+  return 100; // default fallback
 };
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
@@ -52,8 +52,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 
   dagreGraph.setGraph({ 
     rankdir: 'LR',
-    nodesep: 90,   // Vertical separation between nodes
-    ranksep: 160,  // Horizontal separation between columns/ranks
+    nodesep: 130,  // Generous vertical separation between nodes
+    ranksep: 200,  // Generous horizontal separation between columns/ranks
   });
 
   nodes.forEach((node) => {
