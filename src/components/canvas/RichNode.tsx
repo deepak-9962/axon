@@ -1,10 +1,13 @@
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { ChevronDown, BookOpen, CheckCircle2, XCircle } from 'lucide-react';
 
-const RichNode = ({ data, selected }: NodeProps) => {
-  const [expanded, setExpanded] = useState(false);
+import { useStore } from '@/lib/store';
+
+const RichNode = ({ id, data, selected }: NodeProps) => {
+  const { toggleNodeExpanded } = useStore();
+  const expanded = !!data.expanded;
 
   const label = data.label as string;
   const details = data.details as string[] | undefined;
@@ -34,7 +37,7 @@ const RichNode = ({ data, selected }: NodeProps) => {
       {/* Header Section */}
       <div
         className="flex items-center justify-between p-3 cursor-pointer rounded-t-lg select-none"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => toggleNodeExpanded(id)}
       >
         <div className="font-bold text-sm leading-tight flex-1 pr-2 text-stone-900">
           {label}

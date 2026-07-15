@@ -36,7 +36,7 @@ export const getAvailableContentModels = async (apiKey: string): Promise<string[
 
 export const generateMindMap = async (question: string, marks: number, apiKey: string, modelName: string = 'gemini-1.5-flash'): Promise<AIResponse> => {
   const genAI = new GoogleGenerativeAI(apiKey);
-  
+
   const prompt = `
     ${SYSTEM_PROMPT}
     
@@ -62,7 +62,7 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
   `;
 
   const runGeneration = async (selectedModel: string): Promise<string> => {
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: selectedModel,
       generationConfig: { responseMimeType: "application/json" }
     });
@@ -78,34 +78,34 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
     const errText = error?.message || String(error);
     const isQuotaError = errText.includes('429') || errText.toLowerCase().includes('quota') || errText.toLowerCase().includes('limit');
     const isNotFoundError = errText.includes('404') || errText.toLowerCase().includes('not found') || errText.toLowerCase().includes('not support');
-    
+
     if ((isQuotaError || isNotFoundError) && apiKey) {
       console.warn(`Model "${modelName}" failed (${isQuotaError ? "Quota" : "Not Found"}). Fetching available models for fallback...`);
       const availableModels = await getAvailableContentModels(apiKey);
       console.log("Available models for fallback:", availableModels);
-      
+
       const candidates = availableModels.filter(name => name !== modelName);
-      
+
       // Sort candidates: Flash models first, then Pro models, then any other
       const sortedCandidates = [...candidates].sort((a, b) => {
         const aIsFlash = a.toLowerCase().includes('flash');
         const bIsFlash = b.toLowerCase().includes('flash');
         if (aIsFlash && !bIsFlash) return -1;
         if (!aIsFlash && bIsFlash) return 1;
-        
+
         const aIsPro = a.toLowerCase().includes('pro');
         const bIsPro = b.toLowerCase().includes('pro');
         if (aIsPro && !bIsPro) return -1;
         if (!aIsPro && bIsPro) return 1;
-        
+
         return 0;
       });
-      
+
       console.log("Sorted fallback candidates:", sortedCandidates);
-      
+
       let success = false;
       let lastFallbackError = null;
-      
+
       for (const fallbackModel of sortedCandidates) {
         console.log(`Retrying generation with fallback model: "${fallbackModel}"`);
         try {
@@ -118,7 +118,7 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
           lastFallbackError = fallbackError;
         }
       }
-      
+
       if (!success) {
         throw lastFallbackError || error;
       }
@@ -126,7 +126,7 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
       throw error;
     }
   }
-  
+
   try {
     return JSON.parse(text) as AIResponse;
   } catch (e) {
@@ -136,79 +136,79 @@ export const generateMindMap = async (question: string, marks: number, apiKey: s
 };
 
 export const validateApiKey = async (apiKey: string): Promise<string | null> => {
-    // Method 1: Try to list models dynamically via REST API
+  // Method 1: Try to list models dynamically via REST API
+  try {
+    console.log("Fetching available models...");
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      const models = data.models || [];
+      console.log("Available models:", models.map((m: any) => m.name));
+
+      // Filter for models that support generateContent
+      const contentModels = models.filter((m: any) =>
+        m.supportedGenerationMethods?.includes('generateContent')
+      );
+
+      // 1. Prioritize any available Flash model
+      const flashModel = contentModels.find((m: any) => m.name.toLowerCase().includes('flash'));
+      if (flashModel) {
+        const modelName = flashModel.name.replace('models/', '');
+        console.log(`Selected available Flash model: ${modelName}`);
+        return modelName;
+      }
+
+      // 2. Next, check for any Pro model
+      const proModel = contentModels.find((m: any) => m.name.toLowerCase().includes('pro'));
+      if (proModel) {
+        const modelName = proModel.name.replace('models/', '');
+        console.log(`Selected available Pro model: ${modelName}`);
+        return modelName;
+      }
+
+      // 3. Fallback to any valid Gemini model
+      const anyGemini = contentModels.find((m: any) => m.name.includes('gemini'));
+      if (anyGemini) {
+        const modelName = anyGemini.name.replace('models/', '');
+        console.log(`Selected fallback model: ${modelName}`);
+        return modelName;
+      }
+    } else {
+      console.warn("List models failed:", response.status, response.statusText);
+    }
+  } catch (e) {
+    console.warn("Failed to list models, falling back to manual trial", e);
+  }
+
+  // Method 2: Fallback to manual trial if listModels fails
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash-8b',
+    'gemini-2.5-pro',
+    'gemini-2.0-pro',
+    'gemini-1.5-pro',
+    'gemini-1.5-pro-latest',
+    'gemini-pro',
+    'gemini-1.0-pro'
+  ];
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  for (const modelName of modelsToTry) {
     try {
-        console.log("Fetching available models...");
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-        
-        if (response.ok) {
-            const data = await response.json();
-            const models = data.models || [];
-            console.log("Available models:", models.map((m: any) => m.name));
-            
-            // Filter for models that support generateContent
-            const contentModels = models.filter((m: any) => 
-                m.supportedGenerationMethods?.includes('generateContent')
-            );
-
-            // 1. Prioritize any available Flash model
-            const flashModel = contentModels.find((m: any) => m.name.toLowerCase().includes('flash'));
-            if (flashModel) {
-                const modelName = flashModel.name.replace('models/', '');
-                console.log(`Selected available Flash model: ${modelName}`);
-                return modelName;
-            }
-
-            // 2. Next, check for any Pro model
-            const proModel = contentModels.find((m: any) => m.name.toLowerCase().includes('pro'));
-            if (proModel) {
-                const modelName = proModel.name.replace('models/', '');
-                console.log(`Selected available Pro model: ${modelName}`);
-                return modelName;
-            }
-
-            // 3. Fallback to any valid Gemini model
-            const anyGemini = contentModels.find((m: any) => m.name.includes('gemini'));
-            if (anyGemini) {
-                const modelName = anyGemini.name.replace('models/', '');
-                console.log(`Selected fallback model: ${modelName}`);
-                return modelName;
-            }
-        } else {
-            console.warn("List models failed:", response.status, response.statusText);
-        }
+      console.log(`Validating with model: ${modelName}...`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent('Hi');
+      const response = await result.response;
+      console.log(`Validation successful with ${modelName}:`, response.text());
+      return modelName;
     } catch (e) {
-        console.warn("Failed to list models, falling back to manual trial", e);
+      console.warn(`Validation failed for ${modelName}`, e);
     }
-
-    // Method 2: Fallback to manual trial if listModels fails
-    const modelsToTry = [
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash', 
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-flash-8b',
-        'gemini-2.5-pro',
-        'gemini-2.0-pro',
-        'gemini-1.5-pro', 
-        'gemini-1.5-pro-latest',
-        'gemini-pro',
-        'gemini-1.0-pro'
-    ];
-    
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    for (const modelName of modelsToTry) {
-        try {
-            console.log(`Validating with model: ${modelName}...`);
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent('Hi');
-            const response = await result.response;
-            console.log(`Validation successful with ${modelName}:`, response.text());
-            return modelName;
-        } catch (e) {
-            console.warn(`Validation failed for ${modelName}`, e);
-        }
-    }
-    return null;
+  }
+  return null;
 }
