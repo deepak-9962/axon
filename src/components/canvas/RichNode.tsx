@@ -18,13 +18,18 @@ const RichNode = ({ data, selected }: NodeProps) => {
   return (
     <div
       className={cn(
-        "group relative flex flex-col rounded-lg bg-white shadow-md transition-all duration-300 w-[250px]",
-        selected ? "ring-2 ring-black" : "border border-stone-200",
+        "group relative flex flex-col rounded-lg bg-white shadow-md w-[250px]",
+        // Base border or selection ring
+        selected
+          ? "border-2 border-black"
+          : "border border-stone-200",
+        // Static highlight — green border if keywords matched
         highlight && isPracticing
-          ? "ring-2 ring-green-500 bg-green-50 shadow-green-100 shadow-lg"
+          ? "!border-2 !border-green-500"
           : "",
+        // Static dim red border if practicing but nothing matched yet
         !highlight && isPracticing && totalKeywords > 0
-          ? "ring-1 ring-red-200"
+          ? "!border !border-red-300"
           : "",
         expanded ? "z-50 scale-105 shadow-xl" : "hover:shadow-lg"
       )}
@@ -34,10 +39,7 @@ const RichNode = ({ data, selected }: NodeProps) => {
         className="flex items-center justify-between p-3 cursor-pointer rounded-t-lg"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className={cn(
-          "font-bold text-sm leading-tight flex-1 pr-2",
-          highlight && isPracticing ? "text-green-800" : "text-stone-900"
-        )}>
+        <div className="font-bold text-sm leading-tight flex-1 pr-2 text-stone-900">
           {label}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
