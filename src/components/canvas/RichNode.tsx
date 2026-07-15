@@ -1,7 +1,7 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { ChevronDown, BookOpen } from 'lucide-react';
+import { ChevronDown, BookOpen, CheckCircle2, XCircle } from 'lucide-react';
 
 const RichNode = ({ data, selected }: NodeProps) => {
   const [expanded, setExpanded] = useState(false);
@@ -10,40 +10,95 @@ const RichNode = ({ data, selected }: NodeProps) => {
   const details = data.details as string[] | undefined;
   const examTip = data.exam_tip as string | undefined;
   const highlight = data.highlight as boolean | undefined;
+  const matchedKeywords = (data.matchedKeywords as string[] | undefined) ?? [];
+  const missedKeywords = (data.missedKeywords as string[] | undefined) ?? [];
+  const totalKeywords = matchedKeywords.length + missedKeywords.length;
+  const isPracticing = totalKeywords > 0;
 
   return (
     <div
       className={cn(
-        "group relative flex flex-col rounded-lg bg-white shadow-md transition-all duration-200 w-[250px]",
+        "group relative flex flex-col rounded-lg bg-white shadow-md transition-all duration-300 w-[250px]",
         selected ? "ring-2 ring-black" : "border border-stone-200",
-        highlight ? "ring-2 ring-green-500 bg-green-50" : "",
+        highlight && isPracticing
+          ? "ring-2 ring-green-500 bg-green-50 shadow-green-100 shadow-lg"
+          : "",
+        !highlight && isPracticing && totalKeywords > 0
+          ? "ring-1 ring-red-200"
+          : "",
         expanded ? "z-50 scale-105 shadow-xl" : "hover:shadow-lg"
       )}
     >
       {/* Header Section */}
       <div 
-        className="flex items-center justify-between p-3 cursor-pointer bg-white rounded-t-lg"
+        className="flex items-center justify-between p-3 cursor-pointer rounded-t-lg"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="font-bold text-stone-900 text-sm leading-tight">
+        <div className={cn(
+          "font-bold text-sm leading-tight flex-1 pr-2",
+          highlight && isPracticing ? "text-green-800" : "text-stone-900"
+        )}>
           {label}
         </div>
-        <ChevronDown 
-          className={cn(
-            "w-4 h-4 text-stone-400 transition-transform duration-200",
-            expanded ? "rotate-180" : ""
-          )} 
-        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Score pill shown while practicing */}
+          {isPracticing && (
+            <span className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+              matchedKeywords.length === totalKeywords
+                ? "bg-green-100 text-green-700"
+                : matchedKeywords.length > 0
+                ? "bg-amber-100 text-amber-700"
+                : "bg-red-100 text-red-600"
+            )}>
+              {matchedKeywords.length}/{totalKeywords}
+            </span>
+          )}
+          <ChevronDown 
+            className={cn(
+              "w-4 h-4 text-stone-400 transition-transform duration-200",
+              expanded ? "rotate-180" : ""
+            )} 
+          />
+        </div>
       </div>
 
       {/* Expanded Content */}
       <div 
         className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out bg-white rounded-b-lg",
-          expanded ? "max-h-[500px] opacity-100 border-t border-stone-100" : "max-h-0 opacity-0"
+          "overflow-hidden transition-all duration-300 ease-in-out rounded-b-lg",
+          expanded ? "max-h-[600px] opacity-100 border-t border-stone-100" : "max-h-0 opacity-0"
         )}
       >
         <div className="p-3 space-y-3">
+
+          {/* Keyword Status Badges — shown only when practicing */}
+          {isPracticing && totalKeywords > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-400">Keywords</p>
+              <div className="flex flex-wrap gap-1.5">
+                {matchedKeywords.map((kw) => (
+                  <span
+                    key={kw}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 border border-green-200"
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    {kw}
+                  </span>
+                ))}
+                {missedKeywords.map((kw) => (
+                  <span
+                    key={kw}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-50 text-red-500 border border-red-200"
+                  >
+                    <XCircle className="w-3 h-3" />
+                    {kw}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Details List */}
           {details && details.length > 0 && (
             <ul className="list-disc pl-4 space-y-1">
